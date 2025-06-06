@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import FertilizerCatalog from "@/components/FertilizerCatalog";
+import PaymentForm from "@/components/PaymentForm";
 import CustomerForm from "@/components/CustomerForm";
 import OrderSummary from "@/components/OrderSummary";
 
@@ -25,6 +26,17 @@ interface CustomerData {
   paymentMethod: string;
 }
 
+interface PaymentData {
+  method: string;
+  cardNumber?: string;
+  expiryDate?: string;
+  cvv?: string;
+  cardHolder?: string;
+  bankName?: string;
+  accountNumber?: string;
+  phoneNumber?: string;
+}
+
 const Index = () => {
   const [selectedItems, setSelectedItems] = useState<OrderItem[]>([]);
   const [customerData, setCustomerData] = useState<CustomerData>({
@@ -32,6 +44,16 @@ const Index = () => {
     email: "",
     phone: "",
     paymentMethod: "",
+  });
+  const [paymentData, setPaymentData] = useState<PaymentData>({
+    method: "",
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
+    cardHolder: "",
+    bankName: "",
+    accountNumber: "",
+    phoneNumber: "",
   });
 
   const handleFertilizerSelect = (fertilizer: Fertilizer, quantity: number) => {
@@ -61,8 +83,27 @@ const Index = () => {
     setCustomerData(data);
   };
 
+  const handlePaymentDataChange = (data: PaymentData) => {
+    setPaymentData(data);
+  };
+
+  const totalAmount = selectedItems.reduce(
+    (sum, item) => sum + item.fertilizer.price * item.quantity,
+    0,
+  );
+  const deliveryFee = totalAmount > 5000 ? 0 : 500;
+  const finalAmount = totalAmount + deliveryFee;
+
   const handleOrderSubmit = () => {
-    // Here would be the actual order submission logic
+    // Детальная информация для подтверждения
+    const orderDetails = {
+      items: selectedItems,
+      customer: customerData,
+      payment: paymentData,
+      amounts: { totalAmount, deliveryFee, finalAmount },
+    };
+
+    console.log("Данные заказа:", orderDetails);
     alert("Заказ успешно оформлен! Мы свяжемся с вами в ближайшее время.");
 
     // Reset form
@@ -72,6 +113,16 @@ const Index = () => {
       email: "",
       phone: "",
       paymentMethod: "",
+    });
+    setPaymentData({
+      method: "",
+      cardNumber: "",
+      expiryDate: "",
+      cvv: "",
+      cardHolder: "",
+      bankName: "",
+      accountNumber: "",
+      phoneNumber: "",
     });
   };
 
@@ -95,6 +146,11 @@ const Index = () => {
             />
 
             <CustomerForm onDataChange={handleCustomerDataChange} />
+
+            <PaymentForm
+              onDataChange={handlePaymentDataChange}
+              amount={finalAmount}
+            />
           </div>
 
           <div className="lg:col-span-1">
@@ -102,6 +158,7 @@ const Index = () => {
               <OrderSummary
                 items={selectedItems}
                 customerData={customerData}
+                paymentData={paymentData}
                 onSubmit={handleOrderSubmit}
               />
             </div>

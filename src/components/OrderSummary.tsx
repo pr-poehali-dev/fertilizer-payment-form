@@ -19,13 +19,30 @@ interface CustomerData {
   paymentMethod: string;
 }
 
+interface PaymentData {
+  method: string;
+  cardNumber?: string;
+  expiryDate?: string;
+  cvv?: string;
+  cardHolder?: string;
+  bankName?: string;
+  accountNumber?: string;
+  phoneNumber?: string;
+}
+
 interface OrderSummaryProps {
   items: OrderItem[];
   customerData: CustomerData;
+  paymentData: PaymentData;
   onSubmit: () => void;
 }
 
-const OrderSummary = ({ items, customerData, onSubmit }: OrderSummaryProps) => {
+const OrderSummary = ({
+  items,
+  customerData,
+  paymentData,
+  onSubmit,
+}: OrderSummaryProps) => {
   const totalAmount = items.reduce(
     (sum, item) => sum + item.fertilizer.price * item.quantity,
     0,
@@ -38,16 +55,24 @@ const OrderSummary = ({ items, customerData, onSubmit }: OrderSummaryProps) => {
     customerData.email &&
     customerData.phone &&
     customerData.paymentMethod &&
+    paymentData.method &&
     items.length > 0;
 
-  const getPaymentMethodName = (method: string) => {
-    const methods: Record<string, string> = {
-      card: "Банковская карта",
-      cash: "Наличные при получении",
-      transfer: "Банковский перевод",
-      sbp: "СБП",
-    };
-    return methods[method] || method;
+  const getPaymentInfo = () => {
+    if (!paymentData.method) return null;
+
+    switch (paymentData.method) {
+      case "card":
+        return `Карта •••• ${paymentData.cardNumber?.slice(-4) || "****"}`;
+      case "cash":
+        return "Наличные при получении";
+      case "transfer":
+        return `Банковский перевод (${paymentData.bankName || "Банк не выбран"})`;
+      case "sbp":
+        return `СБП ${paymentData.phoneNumber || ""}`;
+      default:
+        return "Способ оплаты не выбран";
+    }
   };
 
   return (
@@ -107,11 +132,11 @@ const OrderSummary = ({ items, customerData, onSubmit }: OrderSummaryProps) => {
               <span className="text-green-600">{finalAmount} ₽</span>
             </div>
 
-            {customerData.paymentMethod && (
-              <div className="bg-gray-50 p-3 rounded-lg">
+            {paymentData.method && (
+              <div className="bg-blue-50 p-3 rounded-lg">
                 <p className="text-sm">
-                  <span className="font-medium">Способ оплаты:</span>{" "}
-                  {getPaymentMethodName(customerData.paymentMethod)}
+                  <span className="font-medium">Оплата:</span>{" "}
+                  {getPaymentInfo()}
                 </p>
               </div>
             )}
